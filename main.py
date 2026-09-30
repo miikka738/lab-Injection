@@ -1,9 +1,14 @@
+import logging
 from fastapi import FastAPI, Query
 from database import get_db_connection
 from typing import Optional
 
-app = FastAPI()
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
+app = FastAPI()
 
 @app.get("/vulnerabilities/sqli/")
 async def sqli_vulnerability(
@@ -29,6 +34,7 @@ async def sqli_vulnerability(
         user = cursor.fetchone()
 
         if user:
+            logging.info(f"Успешный вход пользователя: {username}")
             return {
                 "status": "success",
                 "data": {
@@ -37,13 +43,18 @@ async def sqli_vulnerability(
                 }
             }
         else:
+            logging.warning(f"Неудачная попытка входа для: {username}")
             return {
                 "status": "error",
                 "message": "User not found"
             }
 
     except Exception as e:
-        return {"status": "error", "message": f"Database error: {str(e)}"}
+        logging.error(f"Database error: {e}")
+        return {
+            "status": "error",
+            "message": "Internal server error"
+        }
 
     finally:
         if cursor:

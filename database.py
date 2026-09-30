@@ -5,10 +5,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 def get_db_connection() -> Optional[psycopg2.extensions.connection]:
+
     try:
         conn = psycopg2.connect(
             host=os.getenv("POSTGRES_HOST"),
@@ -41,11 +41,19 @@ def init_db() -> None:
                     last_name VARCHAR(50)
                 );
             """)
-            cur.execute("""
-                INSERT INTO users (username, password, first_name, last_name)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (username) DO NOTHING;
-            """, ("admin", "admin_pass", "Иван", "Иванов"))
+
+            users_data = [
+                ("admin", "admin_pass", "Иван", "Иванов"),
+                ("guest", "guest123", "Гость", "Тестовый"),
+                ("manager", "manager123", "Петр", "Менеджер")
+            ]
+
+            for username, password, first_name, last_name in users_data:
+                cur.execute("""
+                    INSERT INTO users (username, password, first_name, last_name)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (username) DO NOTHING;
+                """, (username, password, first_name, last_name))
 
         conn.commit()
         print("База данных успешно инициализирована.")
